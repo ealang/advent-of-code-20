@@ -1,5 +1,6 @@
 import re
 from typing import NamedTuple, List, Iterable, Optional
+from itertools import islice
 
 
 INSTRUCTION_JMP = "jmp"
@@ -104,7 +105,7 @@ def part2(program: List[Instruction]) -> Optional[int]:
 
     # Find index where we can jump to a non-cycle
     mod = None
-    for state in execute(program):
+    for state in islice(execute(program), len(program)):
         instruction = program[state.i]
         if instruction.op == INSTRUCTION_JMP:
             if not is_on_cycle(state.i + 1):
