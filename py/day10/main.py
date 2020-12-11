@@ -1,5 +1,6 @@
-from collections import defaultdict
-from typing import Dict, List
+import collections
+import itertools
+from typing import List, Iterable
 
 
 def memoized(f):
@@ -11,45 +12,40 @@ def memoized(f):
     return memoized_f
 
 
-def part1_count_deltas(adapters: List[int]) -> int:
-    cur_jolts = 0
-    deltas: Dict[int, int] = defaultdict(int)
-    for adapter in adapters:
-        delta = adapter - cur_jolts
-        deltas[delta] += 1
-        cur_jolts = adapter
-
-    deltas[3] +=1  # include device adapter
-
-    return deltas[1] * deltas[3]
+@memoized
+def fib_3(n: int) -> int:
+    if n <= 0:
+        return 0
+    if n <= 2:
+        return 1
+    return fib_3(n - 1) + fib_3(n - 2) + fib_3(n - 3)
 
 
-def part2_count_permutations(adapters: List[int]) -> int:
-    device_jolts = adapters[-1] + 3
-
-    available_jolts = set(adapters)
-    available_jolts.add(0)
-    available_jolts.add(device_jolts)
-
-    @memoized
-    def count_ways(t):
-        if t not in available_jolts:
-            return 0
-
-        return max(
-            1,
-            count_ways(t - 1) + count_ways(t - 2) + count_ways(t - 3),
-        )
-
-    return count_ways(device_jolts)
+def compute_deltas(items: List[int], initial: int) -> Iterable[int]:
+    for item in items:
+        yield item - initial
+        initial = item
 
 
 def main():
     with open("input.txt") as fp:
         adapters = list(sorted(map(int, fp.readlines())))
 
-    print(part1_count_deltas(adapters))
-    print(part2_count_permutations(adapters))
+    deltas = list(compute_deltas(adapters, initial=0))
+
+    # part 1
+    counts = collections.Counter(deltas)
+    counts[3] += 1  # include device's adapter in counts
+    print(counts[1] * counts[3])
+
+    # part 2
+    num_combos = 1
+    for delta, items in itertools.groupby(deltas):
+        if delta == 1:
+            n = 1 + sum(1 for _ in items)
+            num_combos *= fib_3(n)
+
+    print(num_combos)
 
 
 main()
